@@ -210,10 +210,12 @@
 	[[self map] addAnnotation:[self annotationFromArg:args]];
 }
 
--(void)addAnnotations:(id)args
+-(void)addAnnotations:(id)args vector:(id)*vector
 {
 	ENSURE_TYPE(args,NSArray);
 	ENSURE_UI_THREAD(addAnnotations,args);
+
+	ENSURE_TYPE(vector, NSArray);
 
 	[[self map] addAnnotations:[self annotationsFromArgs:args]];
 }
@@ -894,6 +896,20 @@
 }
 
 - (void)mapView:(MKMapView *)mapView didSelectAnnotationView:(MKAnnotationView *)view{
+
+	[mapView deselectAnnotation:view.annotation animated:YES];
+	UIView *tmp = [[UIView alloc] initWithFrame:CGRectMake(20, 20, 320, 100)];
+	tmp.backgroundColor = [UIColor redColor];
+	[mapView addSubview:tmp];
+
+	UILabel *lblPrecioCal = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 128, 18)];
+	lblPrecioCal.font = [UIFont boldSystemFontOfSize:13];
+	lblPrecioCal.textColor = [UIColor whiteColor];
+	lblPrecioCal.backgroundColor = [UIColor clearColor];
+	lblPrecioCal.text = @"Hola";
+	[tmp addSubview:lblPrecioCal];
+	[mapView bringSubviewToFront:tmp];
+
 	if ([view conformsToProtocol:@protocol(TiMapAnnotation)])
 	{
         
