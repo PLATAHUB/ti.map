@@ -4,7 +4,7 @@
  * Licensed under the terms of the Apache Public License
  * Please see the LICENSE included with this distribution for details.
  */
- 
+
 #import "TiBase.h"
 #import "TiUIView.h"
 #import "TiMKOverlayPathUniversal.h"
@@ -33,10 +33,14 @@
 
     // dictionary for object tracking and association
     CFMutableDictionaryRef mapObjects2View;   // MKOverlay Object -> MKOverlay Object's renderer
-	
+
 	// Location manager needed for iOS 8 permissions
 	CLLocationManager *locationManager;
 
+  NSArray *_vector;
+  UIView *calloutcustom;
+  int indice;
+  UILabel *lblPrecioCal;
 
 }
 
@@ -51,7 +55,7 @@
 
 #pragma mark Public APIs
 -(void)addAnnotation:(id)args;
--(void)addAnnotations:(id)args;
+-(void)addAnnotations:(id)args vector:(id)vector;
 -(void)setAnnotations_:(id)value;
 -(void)removeAnnotation:(id)args;
 -(void)removeAnnotations:(id)args;
@@ -87,5 +91,3 @@
 -(void)fireClickEvent:(MKAnnotationView *) pinview source:(NSString *)source;
 
 @end
-
-

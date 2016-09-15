@@ -80,6 +80,20 @@
         [self registerTouchEvents];
         //Initialize loaded state to YES. This will automatically go to NO if the map needs to download new data
         loaded = YES;
+
+        calloutcustom = [[UIView alloc] initWithFrame:CGRectMake(20, 20, 320, 100)];
+        calloutcustom.backgroundColor = [UIColor redColor];
+        [map addSubview:calloutcustom];
+
+        lblPrecioCal = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 128, 18)];
+        lblPrecioCal.font = [UIFont boldSystemFontOfSize:13];
+        lblPrecioCal.textColor = [UIColor whiteColor];
+        lblPrecioCal.backgroundColor = [UIColor clearColor];
+        [calloutcustom addSubview:lblPrecioCal];
+        [map bringSubviewToFront:calloutcustom];
+        calloutcustom.hidden = TRUE;
+
+
     }
     return map;
 }
@@ -87,13 +101,13 @@
 -(void)registerTouchEvents
 {
     UILongPressGestureRecognizer *longPressInterceptor = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPressOnMap:)];
-    
+
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleOverlayTap:)];
     tap.cancelsTouchesInView = NO;
-    
+
     [map addGestureRecognizer:tap];
     [map addGestureRecognizer:longPressInterceptor];
-    
+
     [longPressInterceptor release];
     [tap release];
 }
@@ -101,10 +115,10 @@
 -(void)handleOverlayTap: (UIGestureRecognizer*)tap
 {
     CGPoint tapPoint = [tap locationInView:self.map];
-    
+
     CLLocationCoordinate2D tapCoord = [self.map convertPoint:tapPoint toCoordinateFromView:self.map];
     MKMapPoint mapPoint = MKMapPointForCoordinate(tapCoord);
-    
+
     [self handlePolygonClick:mapPoint];
     [self handlePolylineClick:mapPoint];
     [self handleCircleClick:mapPoint];
@@ -210,7 +224,7 @@
 	[[self map] addAnnotation:[self annotationFromArg:args]];
 }
 
--(void)addAnnotations:(id)args vector:(id)*vector
+-(void)addAnnotations:(id)args vector:(id)vector
 {
 	ENSURE_TYPE(args,NSArray);
 	ENSURE_UI_THREAD(addAnnotations,args);
@@ -225,7 +239,7 @@
 	ENSURE_SINGLE_ARG(args,NSObject);
 
 	id<MKAnnotation> doomedAnnotation = nil;
-	
+
 	if ([args isKindOfClass:[NSString class]])
 	{
 		// for pre 0.9, we supported removing by passing the annotation title
@@ -243,7 +257,7 @@
 	{
 		doomedAnnotation = args;
 	}
-	
+
     TiThreadPerformOnMainThread(^{
         [[self map] removeAnnotation:doomedAnnotation];
     }, NO);
@@ -252,7 +266,7 @@
 -(void)removeAnnotations:(id)args
 {
 	ENSURE_TYPE(args,NSArray); // assumes an array of TiMapAnnotationProxy, and NSString classes
-    
+
     // Test for annotation title strings
     NSMutableArray *doomedAnnotations = [NSMutableArray arrayWithArray:args];
     NSUInteger count = [doomedAnnotations count];
@@ -273,7 +287,7 @@
             }
         }
     }
-    
+
     TiThreadPerformOnMainThread(^{
         [[self map] removeAnnotations:doomedAnnotations];
     }, NO);
@@ -305,14 +319,14 @@
 {
 	ENSURE_SINGLE_ARG_OR_NIL(args,NSObject);
 	ENSURE_UI_THREAD(selectAnnotation,args);
-	
+
 	if (args == nil) {
 		for (id<MKAnnotation> annotation in [[self map] selectedAnnotations]) {
 			[[self map] deselectAnnotation:annotation animated:animate];
 		}
 		return;
 	}
-	
+
 	if ([args isKindOfClass:[NSString class]])
 	{
 		// for pre 0.9, we supported selecting by passing the annotation title
@@ -406,7 +420,7 @@
     [theDict setObject:NUMFLOAT(region.center.longitude) forKey:@"longitude"];
     [theDict setObject:NUMFLOAT(region.span.latitudeDelta) forKey:@"latitudeDelta"];
     [theDict setObject:NUMFLOAT(region.span.longitudeDelta) forKey:@"longitudeDelta"];
-    
+
     return theDict;
 }
 
@@ -448,12 +462,12 @@
 			region.center = user.location.coordinate;
 			[self render];
 		}
-		else 
+		else
 		{
 			// if we unset but we're not allowed to get the users location, what to do?
 		}
 	}
-	else 
+	else
 	{
 		region = [self regionFromDict:value];
 		[self render];
@@ -601,12 +615,12 @@
 }
 
 -(void)addCircle:(TiMapCircleProxy*)circleProxy {
-    
+
     TiThreadPerformOnMainThread(^{
         MKCircle *circle = [circleProxy circle];
         CFDictionaryAddValue(mapObjects2View, circle, [circleProxy circleRenderer]);
         [map addOverlay:circle];
-        
+
         if (circleProxies == nil) {
             circleProxies = [[NSMutableArray alloc] init];
         }
@@ -773,7 +787,7 @@
 // MKPolylineView is deprecated in iOS 7, still here for backward compatibility.
 // Can be removed when support is dropped for iOS 6 and below.
 - (MKOverlayView *)mapView:(MKMapView *)mapView viewForOverlay:(id <MKOverlay>)overlay
-{	
+{
     return (MKOverlayView *)CFDictionaryGetValue(mapObjects2View, overlay);
 }
 
@@ -782,7 +796,7 @@
     if (ignoreRegionChanged) {
         return;
     }
-    
+
     if ([[self proxy] _hasListeners:@"regionwillchange"]) {
         [self fireEvent:@"regionwillchange" withRegion:region animated:animated];
     }
@@ -795,12 +809,12 @@
     }
     region = [mapView region];
     [self.proxy replaceValue:[self dictionaryFromRegion] forKey:@"region" notification:NO];
-	
+
     if ([self.proxy _hasListeners:@"regionChanged"]) {
         NSLog(@"[WARN] The 'regionChanged' event is deprecated, use 'regionchanged' instead.");
         [self fireEvent:@"regionChanged" withRegion:[mapView region] animated:animated];
 	}
-    
+
 	if ([self.proxy _hasListeners:@"regionchanged"]) {
         [self fireEvent:@"regionchanged" withRegion:[mapView region] animated:animated];
 	}
@@ -846,7 +860,7 @@
     }
 }
 
-- (void)firePinChangeDragState:(MKAnnotationView *) pinview newState:(MKAnnotationViewDragState)newState fromOldState:(MKAnnotationViewDragState)oldState 
+- (void)firePinChangeDragState:(MKAnnotationView *) pinview newState:(MKAnnotationViewDragState)newState fromOldState:(MKAnnotationViewDragState)oldState
 {
 	TiMapAnnotationProxy *viewProxy = [self proxyForAnnotation:pinview];
 
@@ -856,7 +870,7 @@
 	TiProxy * ourProxy = [self proxy];
 	BOOL parentWants = [ourProxy _hasListeners:@"pinchangedragstate"];
 	BOOL viewWants = [viewProxy _hasListeners:@"pinchangedragstate"];
-	
+
 	if(!parentWants && !viewWants)
 		return;
 
@@ -897,30 +911,28 @@
 
 - (void)mapView:(MKMapView *)mapView didSelectAnnotationView:(MKAnnotationView *)view{
 
-	[mapView deselectAnnotation:view.annotation animated:YES];
-	UIView *tmp = [[UIView alloc] initWithFrame:CGRectMake(20, 20, 320, 100)];
-	tmp.backgroundColor = [UIColor redColor];
-	[mapView addSubview:tmp];
+  if(![view.annotation isKindOfClass:[MKUserLocation class]]) {
 
-	UILabel *lblPrecioCal = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 128, 18)];
-	lblPrecioCal.font = [UIFont boldSystemFontOfSize:13];
-	lblPrecioCal.textColor = [UIColor whiteColor];
-	lblPrecioCal.backgroundColor = [UIColor clearColor];
-	lblPrecioCal.text = @"Hola";
-	[tmp addSubview:lblPrecioCal];
-	[mapView bringSubviewToFront:tmp];
+    indice = view.tag;
+    calloutcustom.hidden = FALSE;
+    lblPrecioCal.text = @"Hola";
+  }
 
-	if ([view conformsToProtocol:@protocol(TiMapAnnotation)])
+
+	/*if ([view conformsToProtocol:@protocol(TiMapAnnotation)])
 	{
-        
+
 		BOOL isSelected = [view isSelected];
 		MKAnnotationView<TiMapAnnotation> *ann = (MKAnnotationView<TiMapAnnotation> *)view;
 		[self fireClickEvent:view source:isSelected?@"pin":[ann lastHitName]];
-    }
+    }*/
 }
 
 - (void)mapView:(MKMapView *)mapView didDeselectAnnotationView:(MKAnnotationView *)view{
-	if ([view conformsToProtocol:@protocol(TiMapAnnotation)])
+
+
+
+  if ([view conformsToProtocol:@protocol(TiMapAnnotation)])
 	{
 		BOOL isSelected = [TiUtils boolValue:[view isSelected] def:NO];
 		MKAnnotationView<TiMapAnnotation> *ann = (MKAnnotationView<TiMapAnnotation> *)view;
@@ -952,6 +964,10 @@
 // For MapKit provided annotations (eg. MKUserLocation) return nil to use the MapKit provided annotation view.
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(id <MKAnnotation>)annotation
 {
+
+  UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"entro por aqui" delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil];
+  [alert show];
+
     if ([annotation isKindOfClass:[TiMapAnnotationProxy class]]) {
         TiMapAnnotationProxy *ann = (TiMapAnnotationProxy*)annotation;
         id customView = [ann valueForUndefinedKey:@"customView"];
@@ -969,9 +985,9 @@
             identifier = @"timap-customView";
         }
         MKAnnotationView *annView = nil;
-		
+
         annView = (MKAnnotationView*) [mapView dequeueReusableAnnotationViewWithIdentifier:identifier];
-		
+
         if (annView==nil) {
             if ([identifier isEqualToString:@"timap-customView"]) {
                 annView = [[[TiMapCustomAnnotationView alloc] initWithAnnotation:ann reuseIdentifier:identifier map:self] autorelease];
@@ -991,7 +1007,7 @@
         }
         else {
             MKPinAnnotationView *pinview = (MKPinAnnotationView*)annView;
-            
+
             pinview.pinColor = [ann pincolor];
             pinview.animatesDrop = [ann animatesDrop] && ![(TiMapAnnotationProxy *)annotation placed];
             annView.calloutOffset = CGPointMake(-8, 0);
@@ -999,10 +1015,10 @@
         annView.canShowCallout = [TiUtils boolValue:[ann valueForUndefinedKey:@"canShowCallout"] def:YES];
         annView.enabled = YES;
         annView.centerOffset = ann.offset;
-        
+
         UIView *left = [ann leftViewAccessory];
         UIView *right = [ann rightViewAccessory];
-        
+
         if (left!=nil) {
             annView.leftCalloutAccessoryView = left;
         }
@@ -1012,13 +1028,13 @@
                 annView.leftCalloutAccessoryView = nil;
             }
         }
-        
+
         if (right!=nil) {
             annView.rightCalloutAccessoryView = right;
         }
         else {
             //ios7 requires this to be explicitly set as nil if nil
-            
+
             if (![TiUtils isIOS8OrGreater]) {
                 annView.rightCalloutAccessoryView = nil;
             }
@@ -1027,10 +1043,10 @@
         [annView setDraggable: [TiUtils boolValue: [ann valueForUndefinedKey:@"draggable"]]];
         annView.userInteractionEnabled = YES;
         annView.tag = [ann tag];
-        
+
         return annView;
     }
-    
+
     return nil;
 }
 
@@ -1046,8 +1062,8 @@
 		{
 			return;
 		}
-        /*Image Annotation don't have any animation of its own. 
-         *So in this case we do a custom animation, to place the 
+        /*Image Annotation don't have any animation of its own.
+         *So in this case we do a custom animation, to place the
          *image annotation on top of the mapview.*/
         if([thisView isKindOfClass:[TiMapImageAnnotationView class]] || [thisView isKindOfClass:[TiMapCustomAnnotationView class]])
         {
@@ -1056,9 +1072,9 @@
             {
                 CGRect viewFrame = thisView.frame;
                 thisView.frame = CGRectMake(viewFrame.origin.x, viewFrame.origin.y - self.frame.size.height, viewFrame.size.width, viewFrame.size.height);
-                [UIView animateWithDuration:0.4 
-                                      delay:0.0 
-                                    options:UIViewAnimationCurveEaseOut 
+                [UIView animateWithDuration:0.4
+                                      delay:0.0
+                                    options:UIViewAnimationCurveEaseOut
                                  animations:^{thisView.frame = viewFrame;}
                                  completion:nil];
             }
@@ -1074,18 +1090,18 @@
 {
 	id<MKAnnotation> result = nil;
 	for (UIView* subview in [view subviews]) {
-        
+
 		if (![subview pointInside:[self convertPoint:point toView:subview] withEvent:nil]) {
 			continue;
 		}
-		
+
 		if ([subview isKindOfClass:[MKAnnotationView class]]) {
 			result = [(MKAnnotationView*)subview annotation];
 		}
 		else {
 			result = [self wasHitOnAnnotation:point inView:subview];
 		}
-		
+
 		if (result != nil) {
 			break;
 		}
@@ -1166,7 +1182,7 @@
      [NSNumber numberWithDouble:_region.span.latitudeDelta],@"latitudeDelta",
      [NSNumber numberWithDouble:_region.span.longitudeDelta],@"longitudeDelta",
      NUMBOOL(animated),@"animated",nil];
-    
+
     [self.proxy fireEvent:event withObject:object];
 }
 
@@ -1184,7 +1200,7 @@
 	}
 
     TiProxy * mapProxy = [self proxy];
-	
+
 	id title = [viewProxy title];
 	if (title == nil)
 	{
@@ -1193,7 +1209,7 @@
 
 	NSInteger indexNumber = [pinview tag];
 	id clicksource = source ? source : (id)[NSNull null];
-	
+
 	NSDictionary * event = [NSDictionary dictionaryWithObjectsAndKeys:
 			clicksource,@"clicksource",	viewProxy,@"annotation", mapProxy,@"map",
 			title,@"title",	NUMINTEGER(indexNumber),@"index", nil];
