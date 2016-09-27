@@ -219,19 +219,44 @@
 
 -(void)addAnnotation:(id)args
 {
+
 	ENSURE_SINGLE_ARG(args,NSObject);
 	ENSURE_UI_THREAD(addAnnotation,args);
 	[[self map] addAnnotation:[self annotationFromArg:args]];
+
+  /*UIAlertView *alert=[[UIAlertView alloc]
+                           initWithTitle:@"Atención"
+                           message:@"Entra por unidad"
+                           delegate:self
+                           cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+       [alert show]; */
 }
 
--(void)addAnnotations:(id)args vector:(id)vector
+-(void)addAnnotations:(id)args
 {
 	ENSURE_TYPE(args,NSArray);
-	ENSURE_UI_THREAD(addAnnotations,args);
+	//ENSURE_UI_THREAD(addAnnotations,args);
 
-	ENSURE_TYPE(vector, NSArray);
+	//[[self map] addAnnotations:[self annotationsFromArgs:args]];
 
-	[[self map] addAnnotations:[self annotationsFromArgs:args]];
+	NSArray* tmp = [[NSArray alloc]init];
+
+	for (int i = 0;  < [args count]; ++i)
+	{
+		
+	}
+
+  ENSURE_TYPE(args, NSArray);
+  _vector = args;
+
+ NSString *tmp = [NSString stringWithFormat:@"Elements in annotations array: %d", [_vector count]];
+
+  UIAlertView *alert=[[UIAlertView alloc]
+                           initWithTitle:@"Atención"
+                           message:tmp
+                           delegate:self
+                           cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+  [alert show]; 
 }
 
 -(void)removeAnnotation:(id)args
@@ -965,8 +990,6 @@
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(id <MKAnnotation>)annotation
 {
 
-  UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"entro por aqui" delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil];
-  [alert show];
 
     if ([annotation isKindOfClass:[TiMapAnnotationProxy class]]) {
         TiMapAnnotationProxy *ann = (TiMapAnnotationProxy*)annotation;
